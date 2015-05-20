@@ -1,14 +1,14 @@
 from collections import defaultdict
 import cairo
+import itertools
 import operator
 import os
 import random
 
-WIDTH = 16 * 2
-HEIGHT = 9 * 2
+WIDTH = 16 * 1
+HEIGHT = 9 * 1
 
 WEIGHT_BASE = 2
-RANDOM_WEIGHTS = False
 
 WEIGHT_NONE = 1
 WEIGHT_DEAD_END = 1
@@ -20,7 +20,7 @@ WEIGHT_RIVER_TURN = 1
 WEIGHT_RIVER_STRAIGHT = 1
 WEIGHT_RIVER_BRIDGE = 1
 
-if RANDOM_WEIGHTS:
+if False:
     WEIGHT_NONE = random.randint(0, 5)
     WEIGHT_DEAD_END = random.randint(0, 5)
     WEIGHT_TURN = random.randint(0, 5)
@@ -57,6 +57,11 @@ WEIGHTS = {
     '2121': WEIGHT_RIVER_BRIDGE,
     '2200': WEIGHT_RIVER_TURN,
 }
+
+for k in itertools.product('012', repeat=4):
+    k = ''.join(k)
+    if k not in WEIGHTS:
+        WEIGHTS[k] = 1
 
 def load_tiles(path):
     result = defaultdict(list)
@@ -104,7 +109,7 @@ def generate(tiles, width, height):
     return surface
 
 def main():
-    tiles = load_tiles('tiles1')
+    tiles = load_tiles('tiles3')
     surface = generate(tiles, WIDTH, HEIGHT)
     surface.write_to_png('output.png')
 
