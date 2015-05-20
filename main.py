@@ -1,21 +1,23 @@
+from collections import defaultdict
 import cairo
 import operator
+import os
 import random
 
-TILE_SIZE = 64
 WIDTH = 16 * 2
 HEIGHT = 9 * 2
+
 WEIGHT_BASE = 2
 RANDOM_WEIGHTS = False
 
-WEIGHT_NONE = 4
-WEIGHT_DEAD_END = 0
-WEIGHT_TURN = 2
-WEIGHT_STRAIGHT = 3
+WEIGHT_NONE = 1
+WEIGHT_DEAD_END = 1
+WEIGHT_TURN = 1
+WEIGHT_STRAIGHT = 1
 WEIGHT_T_JUNCTION = 1
 WEIGHT_INTERSECTION = 1
-WEIGHT_RIVER_TURN = 2
-WEIGHT_RIVER_STRAIGHT = 2
+WEIGHT_RIVER_TURN = 1
+WEIGHT_RIVER_STRAIGHT = 1
 WEIGHT_RIVER_BRIDGE = 1
 
 if RANDOM_WEIGHTS:
@@ -56,12 +58,14 @@ WEIGHTS = {
     '2200': WEIGHT_RIVER_TURN,
 }
 
-def load_tiles():
-    result = {}
-    for key in WEIGHTS:
-        path = 'tiles/%s.png' % key
-        surface = cairo.ImageSurface.create_from_png(path)
-        result[key] = surface
+def load_tiles(path):
+    result = defaultdict(list)
+    for name in os.listdir(path):
+        key = name[:4]
+        if key not in WEIGHTS:
+            continue
+        surface = cairo.ImageSurface.create_from_png(os.path.join(path, name))
+        result[key].append(surface)
     return result
 
 def rank(n):
@@ -70,11 +74,14 @@ def rank(n):
     return WEIGHT_BASE ** (n - 1)
 
 def generate(tiles, width, height):
+    tile_size = tiles.values()[0][0].get_width()
     surface = cairo.ImageSurface(
-        cairo.FORMAT_RGB24, width * TILE_SIZE, height * TILE_SIZE)
+        cairo.FORMAT_RGB24, width * tile_size, height * tile_size)
     dc = cairo.Context(surface)
     defaults = []
     for k, weight in WEIGHTS.items():
+        if k not in tiles:
+            continue
         defaults.extend([k] * rank(weight))
     digits = sorted(set(reduce(operator.add, WEIGHTS)))
     lookup = {}
@@ -86,15 +93,18 @@ def generate(tiles, width, height):
             for e in digits:
                 for s in digits:
                     k = n + e + s + w
+                    if k not in tiles:
+                        continue
                     choices.extend([k] * rank(WEIGHTS.get(k)))
             k = random.choice(choices)
             lookup[(x, y)] = k
-            dc.set_source_surface(tiles[k], x * TILE_SIZE, y * TILE_SIZE)
+            tile = random.choice(tiles[k])
+            dc.set_source_surface(tile, x * tile_size, y * tile_size)
             dc.paint()
     return surface
 
 def main():
-    tiles = load_tiles()
+    tiles = load_tiles('tiles1')
     surface = generate(tiles, WIDTH, HEIGHT)
     surface.write_to_png('output.png')
 
