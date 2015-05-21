@@ -5,31 +5,29 @@ import operator
 import os
 import random
 
-WIDTH = 16 * 1
-HEIGHT = 9 * 1
+WIDTH = 16 * 2
+HEIGHT = 9 * 2
 
-WEIGHT_BASE = 2
-
-WEIGHT_NONE = 1
+WEIGHT_NONE = 10
 WEIGHT_DEAD_END = 1
-WEIGHT_TURN = 1
-WEIGHT_STRAIGHT = 1
-WEIGHT_T_JUNCTION = 1
-WEIGHT_INTERSECTION = 1
-WEIGHT_RIVER_TURN = 1
-WEIGHT_RIVER_STRAIGHT = 1
-WEIGHT_RIVER_BRIDGE = 1
+WEIGHT_TURN = 10
+WEIGHT_STRAIGHT = 10
+WEIGHT_T_JUNCTION = 10
+WEIGHT_INTERSECTION = 10
+WEIGHT_RIVER_TURN = 2
+WEIGHT_RIVER_STRAIGHT = 2
+WEIGHT_RIVER_BRIDGE = 2
 
 if False:
-    WEIGHT_NONE = random.randint(0, 5)
-    WEIGHT_DEAD_END = random.randint(0, 5)
-    WEIGHT_TURN = random.randint(0, 5)
-    WEIGHT_STRAIGHT = random.randint(0, 5)
-    WEIGHT_T_JUNCTION = random.randint(0, 5)
-    WEIGHT_INTERSECTION = random.randint(0, 5)
-    WEIGHT_RIVER_TURN = random.randint(0, 5)
-    WEIGHT_RIVER_STRAIGHT = random.randint(0, 5)
-    WEIGHT_RIVER_BRIDGE = random.randint(0, 5)
+    WEIGHT_NONE = random.randint(0, 10)
+    WEIGHT_DEAD_END = random.randint(0, 10)
+    WEIGHT_TURN = random.randint(0, 10)
+    WEIGHT_STRAIGHT = random.randint(0, 10)
+    WEIGHT_T_JUNCTION = random.randint(0, 10)
+    WEIGHT_INTERSECTION = random.randint(0, 10)
+    WEIGHT_RIVER_TURN = random.randint(0, 10)
+    WEIGHT_RIVER_STRAIGHT = random.randint(0, 10)
+    WEIGHT_RIVER_BRIDGE = random.randint(0, 10)
 
 WEIGHTS = {
     '0000': WEIGHT_NONE,
@@ -73,11 +71,6 @@ def load_tiles(path):
         result[key].append(surface)
     return result
 
-def rank(n):
-    if not n:
-        return 0
-    return WEIGHT_BASE ** (n - 1)
-
 def generate(tiles, width, height):
     tile_size = tiles.values()[0][0].get_width()
     surface = cairo.ImageSurface(
@@ -87,7 +80,7 @@ def generate(tiles, width, height):
     for k, weight in WEIGHTS.items():
         if k not in tiles:
             continue
-        defaults.extend([k] * rank(weight))
+        defaults.extend([k] * weight)
     digits = sorted(set(reduce(operator.add, WEIGHTS)))
     lookup = {}
     for y in range(height):
@@ -100,7 +93,7 @@ def generate(tiles, width, height):
                     k = n + e + s + w
                     if k not in tiles:
                         continue
-                    choices.extend([k] * rank(WEIGHTS.get(k)))
+                    choices.extend([k] * WEIGHTS.get(k))
             k = random.choice(choices)
             lookup[(x, y)] = k
             tile = random.choice(tiles[k])
@@ -109,7 +102,7 @@ def generate(tiles, width, height):
     return surface
 
 def main():
-    tiles = load_tiles('tiles3')
+    tiles = load_tiles('tiles1')
     surface = generate(tiles, WIDTH, HEIGHT)
     surface.write_to_png('output.png')
 
